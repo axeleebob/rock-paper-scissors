@@ -1,23 +1,18 @@
-//Tell players how to play the game
-console.log("Run the game() function to play.")
+//initiate whether a game is playing or not. This will become true when the game begins
+let gamePlaying = false;
+//initiate the game round variable
+let roundNumber = 0;
+//initiate computer score
+let computerScore = 0;
+//initiate player score
+let playerScore = 0;
 
 //define the allowed weapons in the game
-let gameChoices = ["rock", "paper", "scissors"];
+const gameChoices = ["rock", "paper", "scissors"];
 //create player selection variable
 let playerSelection = "";
 //create computer selection variable
 let computerSelection = "";
-
-//function to prompt the players selection of rock, paper or scissors and return the value. use the
-//option tryAgain = true if the player entered an incorrect value initially.
-function getPlayerSelection (tryAgain = false) {
-    if (tryAgain) {
-        return prompt("You can only use rock, paper or scissors in this game. Please try again.")
-    }
-    else {
-        return prompt("What will it be? rock, paper or scissors?")
-    }
-}
 
 //function to generate a random selection of rock, paper or scissors.
 function computerPlay () {
@@ -55,75 +50,90 @@ function getResult (playerSelection, computerSelection) {
 
 //function to play a round an return the result of the winner. The function returns a string containing
 //either "player", "computer" or "draw".
-function playRound () {
-    //prompt player selection
-    playerSelection = getPlayerSelection().toLowerCase();
-    //check the player selected a valid option and ask again if they did not.
-    let keepGoing = true;
-    while (keepGoing) {
-        //check the player selected a valid option
-        if (gameChoices.includes(playerSelection)) {
-            keepGoing = false;
-        } else {
-            //ask the player to pick a valid option
-            playerSelection = getPlayerSelection(tryAgain = true).toLowerCase();
-        }
-    }
+function playRound (playerSelection) {
     //generate computer selection
-    computerSelection = computerPlay().toLowerCase();
+    computerSelection = computerPlay();
     //calculate result
     winner = getResult(playerSelection, computerSelection);
     //output result
-    if (winner === "player") {
-        console.log(`The bot chose ${computerSelection}! Nice.`)
-    } else if (winner === "computer") {
-        console.log(`The bot chose ${computerSelection}! Unlucky.`)
-    } else if (winner === "draw") {
-        console.log(`The bot chose ${computerSelection}! Tie.`)
-    }
+    updateRound(winner);
     //return the result of the round
     return winner
 }
 
-//intiate a game which consisting of 5 rounds of playRound(). The user will be informed of their result
-//via the console
-function game () {
-    //welcome message
-    console.log("Welcome to rock, paper, scissors. Pick your weapons wisely...")
-    //initiate computer score
-    let computerScore = 0;
-    //initiate player score
-    let playerScore = 0;
-    //initiate round number
-    //loop through the rounds
-    for (let roundNumber = 1; roundNumber <=5; roundNumber++) {
-        //inform player of the score
-        console.log(`Score: Player ${playerScore} - ${computerScore} Computer`)
-        //play a round and save the result
-        roundResult = playRound();
-        //update the winners score
-        if (roundResult === "player") {
-            playerScore++;
-        } else if (roundResult === "computer") {
-            computerScore++;
+//updates the player with round information by default. use game = true to inform them of the game
+//winner
+function updateRound(winner, isGame = false) {
+    const round = document.querySelector(".round");
+    if (winner === "player") {
+        if (isGame) {round.textContent = "Congratulations! You won the game!"} else {
+            round.textContent = `The bot chose ${computerSelection}! Nice.`;
+        }
+    } else if (winner === "computer") {
+        if (isGame) {round.textContent = "Unlucky, you lost the game to a bot."} else {
+            round.textContent = `The bot chose ${computerSelection}! Unlucky.`;
+        }
+    } else if (winner === "draw") {
+        if (isGame) {round.textContent = "No winners here. The game has ended in a draw."} else {
+            round.textContent = `The bot chose ${computerSelection}! Tie.`;
         }
     }
-    //initiate the winner
-    let winner = "";
-    //calculate the winner
-    if (playerScore > computerScore) {
-        winner = "player";
-    } else if (playerScore < computerScore) {
-        winner = "computer";
-    } else if (playerScore === computerScore) {
-        winner = "draw";
-    }
-    //inform player of the result
-    if (winner === "player") {
-        console.log(`Congratulations! You won! The final result was: Player ${playerScore} - ${computerScore} Computer`)
-    } else if (winner === "computer") {
-        console.log(`Unlucky, the bot you lost to a bot. The final result was: Player ${playerScore} - ${computerScore} Computer`)
-    } else if (winner === "draw") {
-        console.log(`No winners here. It's a draw. The final result was: Player ${playerScore} - ${computerScore} Computer`)
+}
+
+function initiateGame() {
+    gamePlaying = true;
+    playerScore = 0;
+    computerScore = 0;
+    roundNumber = 0;
+}
+
+function updateScore() {
+    document.querySelector(".score").textContent = `${playerScore} - ${computerScore}`
+}
+
+//intiate a game consisting of 5 rounds of playRound(). The user will be informed of their result
+//via the console
+function game (e) {
+    //check if a game is ongoing
+    //if no - initiate
+    if (!gamePlaying) {
+        initiateGame();
+    };
+
+    //incrememnt the round counter
+    roundNumber++;
+
+    //play a round by getting the result from the players action and submitting it to playRound()
+    const playerSelection = e.target.getAttribute("id");
+    const roundResult = playRound(playerSelection);
+
+    //update the winners score
+    if (roundResult === "player") {
+        playerScore++;
+    } else if (roundResult === "computer") {
+        computerScore++;
+        }
+
+    //update game score
+    updateScore();
+    
+    if (roundNumber === 5) {
+        //initiate the winner
+        let gameWinner = "";
+        //calculate the winner
+        if (playerScore > computerScore) {
+            gameWinner = "player";
+        } else if (playerScore < computerScore) {
+            gameWinner = "computer";
+        } else if (playerScore === computerScore) {
+            gameWinner = "draw";
+        }
+        updateRound(gameWinner, isGame = true)
+        gamePlaying = false;
     }
 }
+
+//identify the buttons
+const buttons = document.querySelectorAll(".buttons > button")
+//add event listener to each button which plays a round
+buttons.forEach(button => button.addEventListener("click", e => game(e)));
